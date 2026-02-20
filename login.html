@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Code Review Agent — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #050810;
+      color: #e2e8f0;
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    /* ── Logo ── */
+    .logo { text-align: center; margin-bottom: 28px; }
+    .logo-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 68px; height: 68px; border-radius: 18px;
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.25);
+      font-size: 34px; margin-bottom: 14px;
+    }
+    .logo h1 { font-size: 24px; font-weight: 800; }
+    .logo h1 span { color: #00d4ff; }
+    .logo p {
+      color: #64748b; font-size: 12px;
+      font-family: 'Space Mono', monospace; margin-top: 4px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #0d1117;
+      border: 1px solid #1e2a3a;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 1px solid #1e2a3a;
+    }
+    .tab {
+      padding: 14px 8px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #e2e8f0; }
+    .tab.active {
+      color: #00d4ff;
+      border-bottom-color: #00d4ff;
+      background: rgba(0,212,255,0.04);
+    }
+
+    /* ── Panels ── */
+    .panels { padding: 28px; }
+    .panel { display: none; }
+    .panel.active {
+      display: block;
+      animation: slide 0.22s ease both;
+    }
+    @keyframes slide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .panel-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .panel-sub {
+      font-size: 12px; color: #64748b;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 22px; line-height: 1.65;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(16,185,129,0.07);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 8px; padding: 8px 12px; margin-bottom: 22px;
+      font-size: 12px; font-family: 'Space Mono', monospace; color: #10b981;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #10b981; flex-shrink: 0;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── Alert boxes — HIDDEN BY DEFAULT ── */
+    .err-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #fca5a5;
+      margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+      display: none;   /* <-- hidden until JS shows it */
+    }
+    .ok-box {
+      background: rgba(16,185,129,0.07);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #10b981;
+      margin-bottom: 14px;
+      font-family: 'Space Mono', monospace;
+      display: none;   /* <-- hidden until JS shows it */
+    }
+
+    /* ── Form fields ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 11px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px;
+      font-family: 'Space Mono', monospace;
+    }
+    .form-group input {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid #1e2a3a;
+      border-radius: 9px; color: #e2e8f0;
+      font-family: 'Space Mono', monospace; font-size: 13px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #00d4ff;
+      box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
+    }
+    .form-group input::placeholder { color: #374151; }
+
+    /* ── Remember / forgot row ── */
+    .row-extra {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 18px;
+    }
+    .remember {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: #64748b;
+      font-family: 'Space Mono', monospace; cursor: pointer;
+    }
+    .remember input[type="checkbox"] {
+      accent-color: #00d4ff; width: 14px; height: 14px; cursor: pointer;
+    }
+    .btn-link {
+      font-size: 12px; color: #00d4ff;
+      background: none; border: none;
+      font-family: 'Space Mono', monospace; cursor: pointer;
+    }
+    .btn-link:hover { text-decoration: underline; }
+
+    /* ── Primary button ── */
+    .btn-primary {
+      width: 100%; padding: 13px; margin-top: 4px;
+      background: linear-gradient(135deg, #00d4ff, #0891b2);
+      border: none; border-radius: 10px; color: #050810;
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800;
+      cursor: pointer; transition: opacity 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Ghost button ── */
+    .btn-ghost {
+      width: 100%; padding: 11px; margin-top: 10px;
+      background: transparent; border: 1px solid #1e2a3a;
+      border-radius: 10px; color: #64748b;
+      font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: #00d4ff; color: #00d4ff; }
+
+    /* ── Button spinner ── */
+    .spinner {
+      display: none; width: 14px; height: 14px;
+      border: 2px solid rgba(5,8,16,0.25); border-top-color: #050810;
+      border-radius: 50%; animation: rot 0.7s linear infinite;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #1e2a3a; }
+    .divider span {
+      font-size: 11px; color: #374151;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── Demo box ── */
+    .demo-box {
+      background: rgba(124,58,237,0.07);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 10px; padding: 14px; text-align: center;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .demo-box:hover { background: rgba(124,58,237,0.13); }
+    .demo-box strong { display: block; color: #a78bfa; font-size: 13px; margin-bottom: 6px; }
+    .demo-box .demo-creds {
+      font-size: 12px; color: #64748b;
+      font-family: 'Space Mono', monospace; line-height: 1.6;
+      display: block;
+    }
+    .demo-box .demo-hint {
+      display: block; color: #7c3aed; font-size: 11px; margin-top: 6px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; margin-top: 18px;
+      font-size: 11px; color: #374151;
+      font-family: 'Space Mono', monospace;
+    }
+    .footer span { color: #00d4ff; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">&#x1F916;</div>
+    <h1>Code <span>Review</span> Agent</h1>
+    <p>// AI-Powered Analysis and Rewriting</p>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tab-login"    onclick="showTab('login')">Sign In</button>
+      <button class="tab"        id="tab-register" onclick="showTab('register')">Register</button>
+      <button class="tab"        id="tab-forgot"   onclick="showTab('forgot')">Reset</button>
+    </div>
+
+    <div class="panels">
+
+      <!-- ══════ SIGN IN ══════ -->
+      <div class="panel active" id="panel-login">
+        <div class="status-bar">
+          <div class="status-dot"></div>
+          System Online — Groq + Llama 3.3 70B
+        </div>
+
+        <!-- Error shown only on failed login -->
+        <div class="err-box" id="loginErr"></div>
+
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label for="loginPass">Password</label>
+          <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password"/>
+        </div>
+
+        <div class="row-extra">
+          <label class="remember">
+            <input type="checkbox" id="rememberMe"/>
+            Remember me (30 days)
+          </label>
+          <button class="btn-link" onclick="showTab('forgot')">Forgot password?</button>
+        </div>
+
+        <button class="btn-primary" id="loginBtn" onclick="doLogin()">
+          <div class="spinner" id="loginSpinner"></div>
+          <span id="loginBtnTxt">Sign In</span>
+        </button>
+
+        <div class="divider"><span>or use demo account</span></div>
+
+        <div class="demo-box" onclick="fillDemo()">
+          <strong>Demo Login</strong>
+          <span class="demo-creds">Email: demo@coderev.com<br/>Password: password123</span>
+          <span class="demo-hint">Click to auto-fill</span>
+        </div>
+      </div>
+
+      <!-- ══════ REGISTER ══════ -->
+      <div class="panel" id="panel-register">
+        <div class="panel-title">Create Account</div>
+        <div class="panel-sub">// Join and start reviewing code instantly.</div>
+
+        <div class="err-box" id="regErr"></div>
+        <div class="ok-box"  id="regOk"></div>
+
+        <div class="form-group">
+          <label for="regName">Full Name</label>
+          <input type="text" id="regName" placeholder="Jane Smith" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label for="regPass">Password</label>
+          <input type="password" id="regPass" placeholder="Min. 8 characters" autocomplete="new-password"/>
+        </div>
+
+        <button class="btn-primary" id="regBtn" onclick="doRegister()">
+          <div class="spinner" id="regSpinner"></div>
+          <span id="regBtnTxt">Create Account</span>
+        </button>
+        <button class="btn-ghost" onclick="showTab('login')">← Back to Sign In</button>
+      </div>
+
+      <!-- ══════ FORGOT PASSWORD ══════ -->
+      <div class="panel" id="panel-forgot">
+        <div class="panel-title">Reset Password</div>
+        <div class="panel-sub">// Enter your email — we'll send a reset link (valid 2 hours).</div>
+
+        <div class="err-box" id="forgotErr"></div>
+        <div class="ok-box"  id="forgotOk"></div>
+
+        <div class="form-group">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" placeholder="your@email.com" autocomplete="email"/>
+        </div>
+
+        <button class="btn-primary" id="forgotBtn" onclick="doForgot()">
+          <div class="spinner" id="forgotSpinner"></div>
+          <span id="forgotBtnTxt">Send Reset Link</span>
+        </button>
+        <button class="btn-ghost" onclick="showTab('login')">← Back to Sign In</button>
+      </div>
+
+    </div><!-- /panels -->
+  </div><!-- /card -->
+
+  <div class="footer">Powered by <span>Groq</span> + <span>Llama 3.3</span></div>
+</div><!-- /container -->
+
+<script>
+  var API = 'http://127.0.0.1:8000';
+
+  /* ── Redirect if already logged in ── */
+  if (localStorage.getItem('cr_token') || sessionStorage.getItem('cr_token')) {
+    window.location.href = 'dashboard.html';
+  }
+
+  /* ── Tab switching ── */
+  function showTab(name) {
+    /* tabs */
+    ['login','register','forgot'].forEach(function(n) {
+      document.getElementById('tab-' + n).classList.toggle('active', n === name);
+      document.getElementById('panel-' + n).classList.toggle('active', n === name);
+    });
+    /* clear all messages */
+    document.querySelectorAll('.err-box, .ok-box').forEach(function(el) {
+      el.style.display = 'none';
+      el.textContent   = '';
+    });
+  }
+
+  /* ── Demo auto-fill ── */
+  function fillDemo() {
+    document.getElementById('loginEmail').value = 'demo@coderev.com';
+    document.getElementById('loginPass').value  = 'password123';
+    showTab('login');
+  }
+
+  /* ── Alert helpers ── */
+  function showErr(id, msg) {
+    var el = document.getElementById(id);
+    el.textContent   = msg;
+    el.style.display = 'block';
+    el.className     = 'err-box';
+  }
+  function showOk(id, msg) {
+    var el = document.getElementById(id);
+    el.textContent   = msg;
+    el.style.display = 'block';
+    el.className     = 'ok-box';
+  }
+  function setBusy(btnId, spinId, txtId, busy, label) {
+    document.getElementById(btnId).disabled              = busy;
+    document.getElementById(spinId).style.display        = busy ? 'block' : 'none';
+    document.getElementById(txtId).textContent           = label;
+  }
+
+  /* ══════ LOGIN ══════ */
+  function doLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var pass  = document.getElementById('loginPass').value;
+    var rem   = document.getElementById('rememberMe').checked;
+
+    document.getElementById('loginErr').style.display = 'none';
+
+    if (!email || !pass) {
+      showErr('loginErr', 'Please enter your email and password.');
+      return;
+    }
+
+    setBusy('loginBtn', 'loginSpinner', 'loginBtnTxt', true, 'Signing in…');
+
+    fetch(API + '/api/auth/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email: email, password: pass, remember: rem })
+    })
+    .then(function(res) {
+      return res.json().then(function(d) { return { ok: res.ok, d: d }; });
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.d.detail || 'Invalid email or password.');
+      var store = rem ? localStorage : sessionStorage;
+      store.setItem('cr_token', r.d.token);
+      store.setItem('cr_user',  JSON.stringify(r.d.user));
+      document.getElementById('loginBtnTxt').textContent = '✓ Success!';
+      setTimeout(function() { window.location.href = 'dashboard.html'; }, 500);
+    })
+    .catch(function(e) {
+      showErr('loginErr', e.message);
+      setBusy('loginBtn', 'loginSpinner', 'loginBtnTxt', false, 'Sign In');
+    });
+  }
+
+  /* ══════ REGISTER ══════ */
+  function doRegister() {
+    var name  = document.getElementById('regName').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var pass  = document.getElementById('regPass').value;
+
+    document.getElementById('regErr').style.display = 'none';
+    document.getElementById('regOk').style.display  = 'none';
+
+    if (!name || !email || !pass) { showErr('regErr', 'All fields are required.'); return; }
+    if (pass.length < 8)          { showErr('regErr', 'Password must be at least 8 characters.'); return; }
+
+    setBusy('regBtn', 'regSpinner', 'regBtnTxt', true, 'Creating account…');
+
+    fetch(API + '/api/auth/register', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name: name, email: email, password: pass })
+    })
+    .then(function(res) {
+      return res.json().then(function(d) { return { ok: res.ok, d: d }; });
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.d.detail || 'Registration failed.');
+      showOk('regOk', '✓ Account created! Redirecting to sign in…');
+      setTimeout(function() {
+        document.getElementById('loginEmail').value = email;
+        showTab('login');
+      }, 1800);
+    })
+    .catch(function(e) { showErr('regErr', e.message); })
+    .finally(function() {
+      setBusy('regBtn', 'regSpinner', 'regBtnTxt', false, 'Create Account');
+    });
+  }
+
+  /* ══════ FORGOT PASSWORD ══════ */
+  function doForgot() {
+    var email = document.getElementById('forgotEmail').value.trim();
+
+    document.getElementById('forgotErr').style.display = 'none';
+    document.getElementById('forgotOk').style.display  = 'none';
+
+    if (!email) { showErr('forgotErr', 'Please enter your email address.'); return; }
+
+    setBusy('forgotBtn', 'forgotSpinner', 'forgotBtnTxt', true, 'Sending…');
+
+    fetch(API + '/api/auth/forgot-password', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email: email })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(d) {
+      showOk('forgotOk', '✓ ' + (d.message || 'If that email is registered, a reset link has been sent.'));
+    })
+    .catch(function() {
+      showErr('forgotErr', 'Could not reach server. Is the API running?');
+    })
+    .finally(function() {
+      setBusy('forgotBtn', 'forgotSpinner', 'forgotBtnTxt', false, 'Send Reset Link');
+    });
+  }
+
+  /* ── Enter key ── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    var active = document.querySelector('.panel.active');
+    if (!active) return;
+    if (active.id === 'panel-login')    doLogin();
+    if (active.id === 'panel-register') doRegister();
+    if (active.id === 'panel-forgot')   doForgot();
+  });
+</script>
+</body>
+</html>
