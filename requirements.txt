@@ -2,8 +2,9 @@ fastapi==0.115.0
 uvicorn==0.30.1
 python-dotenv==1.0.0
 groq==0.13.0
-mysql-connector-python==9.0.0
+pymysql==1.1.1
 pydantic==2.8.2
+email-validator==2.2.0
 python-multipart==0.0.9
 bcrypt
 python-jose[cryptography]
